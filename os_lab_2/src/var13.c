@@ -5,6 +5,35 @@
 #include "string.h"
 #include "unistd.h"
 
+char* get_string() {
+    int len = 0, capacity = 10;
+    char* s = (char*)malloc(10 * sizeof(char));
+    if (s == NULL) {
+        perror("Can't read a string");
+        exit(6);
+    }
+
+    char c;
+    read(0, &c, sizeof(char));
+    while (c != '\n') {
+        s[len++] = c;
+        if (c == EOF) {
+            break;
+        }
+        if (len == capacity) {
+            capacity *= 2;
+            s = (char*)realloc(s, capacity * sizeof(char));
+            if (s == NULL) {
+                perror("Can't read a string");
+                exit(6);
+            }
+        }
+        read(0, &c, sizeof(char));
+    };
+    s[len] = '\0';
+    return s;
+}
+
 int main() {
         int fd1[2], fd2[2], fd3[2];
         pipe(fd1);
@@ -63,24 +92,22 @@ int main() {
                         close(fd3[1]);
                         close(fd2[1]);
                         close(fd1[0]);
-                        fflush(stdout);
+                        //fflush(stdout);
                         int n;
-                        scanf("%d", &n);
-                        // printf("Success");
-                        char str[n + 1];
+                        //read(0, &n, sizeof(int));
+                        char* str = get_string();
+                        n = strlen(str);
                         //scanf("%s:[^ ]", str);
                         //getline(str, n, stdin);
                         //char* str;
-                        //fgets(str, 100, stdin)
-                        //n = strlen(str);
-                        printf("%d\n", n);
+                        //fgets(str, 3, stdin);
                         write(fd1[1], &n, sizeof(int));
-                        n = -1;
-                        /*for (int i = 0; i < n; ++i) {
-                                write(fd1[1], &str[i], sizeof(char));
-                                printf("%c", str[i]);
-                        }*/
+                        //n = -1;
+                        write(fd1[1], str, sizeof(char) * n);
                         int status;
+                        if (wait(&status) == -1){
+                                perror("wait");
+                        }
                         if (wait(&status) == -1){
                                 perror("wait");
                         }
@@ -89,15 +116,12 @@ int main() {
                         }
                         // sleep(0.2);
                         char str_cool[n + 1];
-                        /*for (int i = 0; i < n; ++i) {
-                                read(fd3[0], &str_cool[i], sizeof(char));
-                                printf("%c", str_cool[i]);
-                        }*/
                         read(fd3[0], &n, sizeof(int));
+                        read(fd3[0], str_cool, sizeof(char) * n);
                         printf("%d\n", n);
                         //printf("\n");
                         str_cool[n] = '\0';
-                        // printf("%s\n", str_cool);
+                        printf("%s\n", str_cool);
                         close(fd3[0]);
                         close(fd1[1]);
                 }
